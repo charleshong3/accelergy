@@ -2,6 +2,7 @@ from yaml import load
 from copy import deepcopy
 from accelergy.parsing_utils import *
 from collections import OrderedDict
+import time
 
 
 class RawInputs2Dicts():
@@ -110,7 +111,16 @@ class RawInputs2Dicts():
     def load_file(self, file_path):
         if '.yaml' in file_path:
             file_obj = open(file_path)
-            file = load(file_obj, accelergy_loader)
+            file = None
+            tries = 0
+            while file is None:
+                file = load(file_obj, accelergy_loader)
+                if file is None:
+                    print("raw_inputs_2_dicts.py:load_file() could not load", file_path)
+                time.sleep(0.01)
+                tries += 1
+                if tries > 1000:
+                    raise
             loaded_content_list =[]
             for top_key in file.keys():
                 if top_key not in self.possible_top_keys:
@@ -320,7 +330,7 @@ class RawInputs2Dicts():
     def construct_parse_config_file(self):
         """load exisiting config file content (if any)/ create a default config file"""
 
-        possible_config_dirs = ['.' + os.sep, os.path.expanduser('~') + '/.config/accelergy/']
+        possible_config_dirs = ['/scratch/charleshong/', '.' + os.sep, os.path.expanduser('~') + '/.config/accelergy/']
         config_file_name = 'accelergy_config.yaml'
         for possible_dir in possible_config_dirs:
             if os.path.exists(possible_dir + config_file_name):
